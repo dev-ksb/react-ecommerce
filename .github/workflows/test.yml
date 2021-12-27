@@ -1,8 +1,28 @@
 name: Demo Github Action
 on: [push]
 jobs:
-  print-hello-world:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Hello World"
-      - run: echo "Run step 2"
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+      - name: Install project dependencies
+        run: yarn
+      - name: Build the project
+        run: yarn build
+      - name: Deploying the project
+        run: |
+          prodRun=""
+          if [[ ${GITHUB_REF} == "refs/heads/main" ]]; then
+            prodRun="--prod"
+          fi
+
+          npx vercel --token ${VERCEL_TOKEN} $prodRun
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      - name: Setup finished
+        run: echo "Successfully build!!"
